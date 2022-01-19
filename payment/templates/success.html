@@ -1,0 +1,189 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="icon"
+    type="image/x-icon"
+    href="{% static '/assets/NSTS.png' %}"
+  />
+  <title>NSTS - Registration Form</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+      crossorigin="anonymous"
+    />
+    <script src="https://smtpjs.com/v3/smtp.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+      crossorigin="anonymous"
+    ></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+  </head>
+    <style>
+      body {
+        text-align: center;
+        padding: 40px 0;
+        background: #EBF0F5;
+      }
+        h1 {
+          color: #88B04B;
+          font-size: 40px;
+          margin-bottom: 10px;
+        }
+        p {
+          color: #404F5E;
+          font-size:20px;
+          margin: 0;
+        }
+      i {
+        color: #9ABC66;
+        font-size: 100px;
+        line-height: 200px;
+        margin-left:-15px;
+      }
+      .card {
+        background: white;
+        padding: 60px;
+        border-radius: 4px;
+        box-shadow: 0 2px 3px #C8D0D8;
+        display: inline-block;
+        margin: 0 auto;
+      }
+    </style>
+    <body>
+      <div class="card">
+      <div >
+        <img src="/static/assets/success.png" alt="" class="mx-2" width="30%" />
+      </div>
+        <h1>Success</h1> 
+        <p>Your registration is succesful<br/> Please check your email  <br> <br> <span class="text-danger"> (Please check spam if you have not received email) </span></p>
+      </div>
+    </body>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+      import {
+        getAuth,
+        createUserWithEmailAndPassword,
+      } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
+
+      import {
+        getFirestore,
+        getDocs,
+        collection,
+        setDoc,
+        addDoc,
+      } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
+
+
+      var config = {
+        apiKey: "AIzaSyDGM9F4INnK6AQYXu8MOgcVb8fbuRoE7o0",
+        authDomain: "nsts-12035.firebaseapp.com",
+        projectId: "nsts-12035",
+        storageBucket: "nsts-12035.appspot.com",
+        messagingSenderId: "1058588746805",
+        appId: "1:1058588746805:web:5b2af02bfd245c5e527d7c",
+        measurementId: "G-5201C5ZME1",
+      };
+      const app = initializeApp(config);
+      const db = getFirestore(app);
+
+
+      $(document).ready(function () {
+       addUser();
+       addData();
+       sendEmail();
+    });
+
+      function addUser() {
+        var data = localStorage.getItem("usersData");
+        data = JSON.parse(data);
+        const email = data.email;
+        const password = data.password;
+        console.log(email, password);
+        const auth = getAuth();
+        createUserWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            const user = userCredential.user;
+          })
+          .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            // ..
+          });
+      }
+
+      function sendEmail() {
+        var data = localStorage.getItem("usersData");
+        data = JSON.parse(data);
+
+        let emailBody = `<h2> Congratulations ${data.fullName},</h2> 
+        <h3> Your registration to NSTS- Nobel exam is successful, 
+        <br> please make a note of your login credentials 
+        <br> Email : ${data.email} 
+        <br> Password: ${data.password} </h3>`;
+        Email.send({
+          Host: "smtp.gmail.com",
+          Username: "nstsexam.nobel@gmail.com",
+          Password: "nsts@2022",
+          To: data.email,
+          From: "nstsexam.nobel@gmail.com",
+          Subject: "NSTS Registartion Successful",
+          Body: emailBody,
+        });
+      }
+
+      async function addData() {
+        var data = localStorage.getItem("usersData");
+        data = JSON.parse(data);
+        let group;
+        switch (data.standard) {
+          case "5":
+          case "6":
+          case "7":
+            group = "groupA";
+            break;
+          case "8":
+          case "9":
+          case "10":
+            group = "groupB";
+            break;
+          case "11":
+          case "12":
+          case "Diploma":
+            group = "groupC";
+            break;
+          default:
+            break;
+        }
+
+        var ref = collection(db, group);
+        const docRef = addDoc(ref, {
+          fullName: data.fullName,
+          fathersName: data.fathersName,
+          mothersName: data.mothersName,
+          schoolName: data.schoolName,
+          dob: data.dob,
+          standard: data.standard,
+          age: data.age,
+          email: data.email,
+          phoneNo: data.phoneNo,
+          waNo: data.waNo,
+          address: data.address,
+          payemnt_id: "{{payment_id}}",
+        })
+          .then(() => {
+            alert("Registration Successful.");
+          })
+          .catch((error) => {
+            alert("Registration Failed.");
+          });
+      }
+    </script>
+</html>
